@@ -45,7 +45,6 @@
             max-width: 900px;
             margin: 50px auto;
             padding: 20px;
-            text-align: center;
         }
         .balance-container {
             padding: 20px;
@@ -162,79 +161,6 @@
             document.getElementById("salt-amount").innerText = formatNumber(balance * 1.17);
         }
 
-        function transferFunds() {
-            let balance = parseFloat(getCookie("Balance"));
-            let amount = parseFloat(document.getElementById("transfer-amount").value);
-            let alertBox = document.getElementById("transfer-alert");
-
-            if (isNaN(amount) || amount <= 0) {
-                alertBox.textContent = "Invalid amount.";
-                alertBox.className = "alert error";
-                alertBox.style.display = "block";
-                return;
-            }
-
-            if (amount > balance) {
-                alertBox.textContent = "Insufficient funds!";
-                alertBox.className = "alert error";
-                alertBox.style.display = "block";
-            } else {
-                balance -= amount;
-                setCookie("Balance", balance.toFixed(2), 3);
-                updateBalance();
-                alertBox.textContent = "Transfer successful!";
-                alertBox.className = "alert success";
-                alertBox.style.display = "block";
-            }
-        }
-
-        let investmentInterval;
-        function invest() {
-            let balance = parseFloat(getCookie("Balance"));
-            let investAmount = parseFloat(document.getElementById("investment-amount").value);
-            let investText = document.getElementById("investment-text");
-            let investBtn = document.getElementById("investment-btn");
-
-            if (investAmount > balance || investAmount <= 0) {
-                alert("Invalid investment amount.");
-                return;
-            }
-
-            balance -= investAmount;
-            setCookie("Balance", balance.toFixed(2), 3);
-            updateBalance();
-            investText.innerHTML = `<span style="color: black;">$</span>${formatNumber(investAmount)}`;
-            investBtn.textContent = "Take Out";
-            investBtn.classList.add("active");
-
-            let currentInvestment = investAmount;
-            investmentInterval = setInterval(() => {
-                currentInvestment *= 1.0001;
-                investText.innerHTML = `<span style="color: black;">$</span>${formatNumber(currentInvestment)}`;
-            }, 1);
-        }
-
-        function takeOut() {
-            clearInterval(investmentInterval);
-            let investText = document.getElementById("investment-text");
-            let investBtn = document.getElementById("investment-btn");
-            let finalAmount = parseFloat(investText.textContent.replace("$", "").replace(/,/g, ""));
-            let balance = parseFloat(getCookie("Balance"));
-
-            balance += finalAmount;
-            setCookie("Balance", balance.toFixed(2), 3);
-            updateBalance();
-            investText.innerHTML = `<span style="color: black;">$</span>0.00`;
-            investBtn.textContent = "Place Investment";
-            investBtn.classList.remove("active");
-        }
-
-        function handleInvestmentClick() {
-            let investBtn = document.getElementById("investment-btn");
-            if (investBtn.classList.contains("active")) takeOut();
-            else invest();
-        }
-
         window.onload = updateBalance;
     </script>
 </head>
@@ -243,7 +169,32 @@
         <img src="logo.png" alt="Salt Finance Logo">
         <button onclick="setCookie('Balance', 0, -1); location.reload();">Logout</button>
     </nav>
-    
+
+    <div class="container">
+        <div class="balance-container">
+            <p id="balance"></p>
+            <p class="subtext">Salt Equivalent: <span id="salt-amount"></span> kg</p>
+        </div>
+
+        <div class="content-container">
+            <div class="left">
+                <h3>Transfer Funds</h3>
+                <input type="number" id="transfer-amount" class="input" placeholder="Amount">
+                <button class="button" onclick="transferFunds()">Transfer</button>
+                <p id="transfer-alert" class="alert"></p>
+            </div>
+
+            <div class="right">
+                <h3>Invest</h3>
+                <div class="investment-circle">
+                    <p id="investment-text"><span style="color: black;">$</span>0.00</p>
+                </div>
+                <input type="number" id="investment-amount" class="input" placeholder="Amount">
+                <button class="button" id="investment-btn" onclick="handleInvestmentClick()">Place Investment</button>
+            </div>
+        </div>
+    </div>
+
     <footer class="footer">
         &copy; 2025 Salt Finance. All rights reserved.
     </footer>
