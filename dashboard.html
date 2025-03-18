@@ -1,101 +1,251 @@
-<script>
-    function getCookie(name) {
-        let cookies = document.cookie.split('; ');
-        for (let cookie of cookies) {
-            let [key, value] = cookie.split('=');
-            if (key === name) return value;
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Salt Finance</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            margin: 0;
+            font-family: 'Montserrat', sans-serif;
+            background-color: white;
+            color: #333;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            text-align: center;
         }
-        return "0";
-    }
-
-    function setCookie(name, value, days) {
-        let date = new Date();
-        date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
-        document.cookie = `${name}=${value}; expires=${date.toUTCString()}; path=/`;
-    }
-
-    function formatNumber(num) {
-        return num.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-    }
-
-    function updateBalance() {
-        let balance = parseFloat(getCookie("Balance"));
-        document.getElementById("balance").innerHTML = `<span style="color: black;">$</span><span style="color: #2FB4FF;">${formatNumber(balance)}</span>`;
-        document.getElementById("salt-amount").innerText = formatNumber(balance * 1.17);
-    }
-
-    function transferFunds() {
-        let balance = parseFloat(getCookie("Balance"));
-        let amount = parseFloat(document.getElementById("transfer-amount").value);
-        let alertBox = document.getElementById("transfer-alert");
-
-        if (isNaN(amount) || amount <= 0) {
-            alertBox.textContent = "Invalid amount.";
-            alertBox.className = "alert error";
-            alertBox.style.display = "block";
-            return;
+        .navbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 20px;
+            background-color: white;
+            border-bottom: 2px solid #2FB4FF;
+        }
+        .navbar img {
+            height: 40px;
+        }
+        .navbar button {
+            background-color: #FF4F4F;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            border-radius: 5px;
+            font-weight: bold;
+            transition: background-color 0.5s ease;
+        }
+        .navbar button:hover {
+            background-color: #E03C3C;
+        }
+        .container {
+            max-width: 900px;
+            margin: 50px auto;
+            padding: 20px;
+            text-align: center;
+        }
+        .balance-container {
+            padding: 20px;
+            font-size: 32px;
+            font-weight: bold;
+        }
+        .balance-container span {
+            color: #2FB4FF;
+        }
+        .subtext {
+            font-size: 18px;
+            margin-bottom: 20px;
+        }
+        .content-container {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+        }
+        .left, .right {
+            flex: 1;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            margin: 10px;
+        }
+        .right {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        .investment-circle {
+            width: 150px;
+            height: 150px;
+            background-color: #2FB4FF;
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+        .input {
+            width: 80%;
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+        .button {
+            background-color: #2FB4FF;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            border-radius: 5px;
+            font-weight: bold;
+            transition: background-color 0.5s ease;
+        }
+        .button:hover {
+            background-color: #1998E0;
+        }
+        .button.active {
+            background-color: #FF4F4F;
+        }
+        .button.active:hover {
+            background-color: #E03C3C;
+        }
+        .alert {
+            display: none;
+            margin-top: 10px;
+            font-size: 14px;
+            font-weight: bold;
+        }
+        .alert.success { color: green; }
+        .alert.error { color: red; }
+        .footer {
+            margin-top: auto;
+            text-align: center;
+            padding: 15px;
+            background-color: #2FB4FF;
+            color: white;
+            font-size: 14px;
+        }
+    </style>
+    <script>
+        function getCookie(name) {
+            let cookies = document.cookie.split('; ');
+            for (let cookie of cookies) {
+                let [key, value] = cookie.split('=');
+                if (key === name) return value;
+            }
+            return "0";
         }
 
-        if (amount > balance) {
-            alertBox.textContent = "Insufficient funds!";
-            alertBox.className = "alert error";
-            alertBox.style.display = "block";
-        } else {
-            balance -= amount;
+        function setCookie(name, value, days) {
+            let date = new Date();
+            date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
+            document.cookie = `${name}=${value}; expires=${date.toUTCString()}; path=/`;
+        }
+
+        function formatNumber(num) {
+            return num.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        }
+
+        function updateBalance() {
+            let balance = parseFloat(getCookie("Balance"));
+            document.getElementById("balance").innerHTML = `<span style="color: black;">$</span><span style="color: #2FB4FF;">${formatNumber(balance)}</span>`;
+            document.getElementById("salt-amount").innerText = formatNumber(balance * 1.17);
+        }
+
+        function transferFunds() {
+            let balance = parseFloat(getCookie("Balance"));
+            let amount = parseFloat(document.getElementById("transfer-amount").value);
+            let alertBox = document.getElementById("transfer-alert");
+
+            if (isNaN(amount) || amount <= 0) {
+                alertBox.textContent = "Invalid amount.";
+                alertBox.className = "alert error";
+                alertBox.style.display = "block";
+                return;
+            }
+
+            if (amount > balance) {
+                alertBox.textContent = "Insufficient funds!";
+                alertBox.className = "alert error";
+                alertBox.style.display = "block";
+            } else {
+                balance -= amount;
+                setCookie("Balance", balance.toFixed(2), 3);
+                updateBalance();
+                alertBox.textContent = "Transfer successful!";
+                alertBox.className = "alert success";
+                alertBox.style.display = "block";
+            }
+        }
+
+        let investmentInterval;
+        function invest() {
+            let balance = parseFloat(getCookie("Balance"));
+            let investAmount = parseFloat(document.getElementById("investment-amount").value);
+            let investText = document.getElementById("investment-text");
+            let investBtn = document.getElementById("investment-btn");
+
+            if (investAmount > balance || investAmount <= 0) {
+                alert("Invalid investment amount.");
+                return;
+            }
+
+            balance -= investAmount;
             setCookie("Balance", balance.toFixed(2), 3);
             updateBalance();
-            alertBox.textContent = "Transfer successful!";
-            alertBox.className = "alert success";
-            alertBox.style.display = "block";
-        }
-    }
+            investText.innerHTML = `<span style="color: black;">$</span>${formatNumber(investAmount)}`;
+            investBtn.textContent = "Take Out";
+            investBtn.classList.add("active");
 
-    let investmentInterval;
-    function invest() {
-        let balance = parseFloat(getCookie("Balance"));
-        let investAmount = parseFloat(document.getElementById("investment-amount").value);
-        let investText = document.getElementById("investment-text");
-        let investBtn = document.getElementById("investment-btn");
-
-        if (investAmount > balance || investAmount <= 0) {
-            alert("Invalid investment amount.");
-            return;
+            let currentInvestment = investAmount;
+            investmentInterval = setInterval(() => {
+                currentInvestment *= 1.0001;
+                investText.innerHTML = `<span style="color: black;">$</span>${formatNumber(currentInvestment)}`;
+            }, 1);
         }
 
-        balance -= investAmount;
-        setCookie("Balance", balance.toFixed(2), 3);
-        updateBalance();
-        investText.innerHTML = `<span style="color: black;">$</span>${formatNumber(investAmount)}`;
-        investBtn.textContent = "Take Out";
-        investBtn.classList.add("active");
+        function takeOut() {
+            clearInterval(investmentInterval);
+            let investText = document.getElementById("investment-text");
+            let investBtn = document.getElementById("investment-btn");
+            let finalAmount = parseFloat(investText.textContent.replace("$", "").replace(/,/g, ""));
+            let balance = parseFloat(getCookie("Balance"));
 
-        let currentInvestment = investAmount;
-        investmentInterval = setInterval(() => {
-            currentInvestment *= 1.0001;
-            investText.innerHTML = `<span style="color: black;">$</span>${formatNumber(currentInvestment)}`;
-        }, 1);
-    }
+            balance += finalAmount;
+            setCookie("Balance", balance.toFixed(2), 3);
+            updateBalance();
+            investText.innerHTML = `<span style="color: black;">$</span>0.00`;
+            investBtn.textContent = "Place Investment";
+            investBtn.classList.remove("active");
+        }
 
-    function takeOut() {
-        clearInterval(investmentInterval);
-        let investText = document.getElementById("investment-text");
-        let investBtn = document.getElementById("investment-btn");
-        let finalAmount = parseFloat(investText.textContent.replace("$", "").replace(/,/g, ""));
-        let balance = parseFloat(getCookie("Balance"));
+        function handleInvestmentClick() {
+            let investBtn = document.getElementById("investment-btn");
+            if (investBtn.classList.contains("active")) takeOut();
+            else invest();
+        }
 
-        balance += finalAmount;
-        setCookie("Balance", balance.toFixed(2), 3);
-        updateBalance();
-        investText.innerHTML = `<span style="color: black;">$</span>0.00`;
-        investBtn.textContent = "Place Investment";
-        investBtn.classList.remove("active");
-    }
-
-    function handleInvestmentClick() {
-        let investBtn = document.getElementById("investment-btn");
-        if (investBtn.classList.contains("active")) takeOut();
-        else invest();
-    }
-
-    window.onload = updateBalance;
-</script>
+        window.onload = updateBalance;
+    </script>
+</head>
+<body>
+    <nav class="navbar">
+        <img src="logo.png" alt="Salt Finance Logo">
+        <button onclick="setCookie('Balance', 0, -1); location.reload();">Logout</button>
+    </nav>
+    
+    <footer class="footer">
+        &copy; 2025 Salt Finance. All rights reserved.
+    </footer>
+</body>
+</html>
