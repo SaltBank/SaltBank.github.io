@@ -41,19 +41,17 @@
         .logout-btn:hover {
             background-color: #C03E4F;
         }
-        .dashboard-container {
+        .balance-container {
             width: 80%;
             margin: 50px auto 20px auto;
             padding: 30px;
             border-radius: 10px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
             background-color: #f5f5f5;
-        }
-        .balance-display {
+            text-align: center;
             font-size: 32px;
             font-weight: bold;
         }
-        .balance-display span {
+        .balance-container span {
             color: #2FB4FF;
         }
         .subtext {
@@ -67,30 +65,35 @@
             width: 80%;
             margin: auto;
         }
-        .left-box {
-            width: 30%;
-            height: auto;
-            background-color: #f5f5f5;
-            border-radius: 10px;
-            padding: 20px;
-            text-align: left;
-        }
-        .right-box {
-            width: 65%;
-            height: 250px;
+        .left-box, .right-box {
+            flex: 1;
             background-color: #f5f5f5;
             border-radius: 10px;
             padding: 20px;
         }
-        .transfer-input {
+        .investment-circle {
+            width: 150px;
+            height: 150px;
+            background-color: #2FB4FF;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            font-size: 24px;
+            font-weight: bold;
+            margin: auto;
+        }
+        .input-box {
             width: 100%;
             padding: 10px;
-            margin: 10px 0;
+            margin-top: 10px;
             border: 1px solid #ccc;
             border-radius: 5px;
             font-size: 16px;
+            text-align: center;
         }
-        .transfer-btn {
+        .action-btn {
             width: 100%;
             background-color: #2FB4FF;
             color: white;
@@ -101,9 +104,10 @@
             border-radius: 5px;
             font-weight: bold;
             transition: background-color 0.5s ease;
+            margin-top: 10px;
         }
-        .transfer-btn:hover {
-            background-color: #1998E0;
+        .investment-btn.active {
+            background-color: #E04F5F;
         }
         .alert {
             display: none;
@@ -127,13 +131,15 @@
         }
     </style>
     <script>
+        let investmentInterval;
+
         function getCookie(name) {
             let cookies = document.cookie.split('; ');
             for (let cookie of cookies) {
                 let [key, value] = cookie.split('=');
                 if (key === name) return value;
             }
-            return "0"; // Default if no balance is found
+            return "0";
         }
 
         function setCookie(name, value, days) {
@@ -172,13 +178,52 @@
                 alertBox.className = "alert success";
                 alertBox.style.display = "block";
             }
-
-            document.getElementById("transfer-amount").value = "";
         }
 
-        function logout() {
-            document.cookie = "Balance=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
-            window.location.href = "/login";
+        function invest() {
+            let balance = parseFloat(getCookie("Balance"));
+            let investAmount = parseFloat(document.getElementById("investment-amount").value);
+            let investText = document.getElementById("investment-text");
+            let investBtn = document.getElementById("investment-btn");
+
+            if (investAmount > balance || investAmount <= 0) {
+                alert("Invalid investment amount.");
+                return;
+            }
+
+            balance -= investAmount;
+            setCookie("Balance", balance.toFixed(2), 3);
+            updateBalance();
+            investText.textContent = `$${investAmount.toFixed(2)}`;
+            investBtn.textContent = "Take Out";
+            investBtn.classList.add("active");
+
+            let currentInvestment = investAmount;
+            investmentInterval = setInterval(() => {
+                currentInvestment *= 1.0001;
+                investText.textContent = `$${currentInvestment.toFixed(2)}`;
+            }, 1);
+        }
+
+        function takeOut() {
+            clearInterval(investmentInterval);
+            let investText = document.getElementById("investment-text");
+            let investBtn = document.getElementById("investment-btn");
+            let finalAmount = parseFloat(investText.textContent.replace("$", ""));
+            let balance = parseFloat(getCookie("Balance"));
+
+            balance += finalAmount;
+            setCookie("Balance", balance.toFixed(2), 3);
+            updateBalance();
+            investText.textContent = "$0";
+            investBtn.textContent = "Place Investment";
+            investBtn.classList.remove("active");
+        }
+
+        function handleInvestmentClick() {
+            let investBtn = document.getElementById("investment-btn");
+            if (investBtn.classList.contains("active")) takeOut();
+            else invest();
         }
 
         window.onload = updateBalance;
@@ -189,24 +234,28 @@
         <img src="logo.png" alt="Salt Finance Logo">
         <button class="logout-btn" onclick="logout()">Logout</button>
     </nav>
-    
-    <div class="dashboard-container">
-        <h2 class="balance-display">$<span id="balance">0</span></h2>
-        <p class="subtext">Equivalent to <span id="salt-amount">0</span> kg of salt</p>
+
+    <div class="balance-container">
+        Balance: <span id="balance">$0.00</span> (Salt: <span id="salt-amount">0.00kg</span>)
     </div>
 
     <div class="content-container">
         <div class="left-box">
             <h3>Transfer Funds</h3>
-            <input type="number" id="transfer-amount" class="transfer-input" placeholder="Enter amount">
-            <button class="transfer-btn" onclick="transferFunds()">Transfer</button>
+            <input type="number" id="transfer-amount" class="input-box" placeholder="Enter amount">
+            <button class="action-btn" onclick="transferFunds()">Transfer</button>
             <p id="transfer-alert" class="alert"></p>
         </div>
-        <div class="right-box">Right content</div>
+
+        <div class="right-box">
+            <div class="investment-circle">
+                <span id="investment-text">$0</span>
+            </div>
+            <input type="number" id="investment-amount" class="input-box" placeholder="Enter amount">
+            <button id="investment-btn" class="action-btn" onclick="handleInvestmentClick()">Place Investment</button>
+        </div>
     </div>
 
-    <footer class="footer">
-        &copy; 2025 Salt Finance. All rights reserved.
-    </footer>
+    <footer class="footer">&copy; 2025 Salt Finance. All rights reserved.</footer>
 </body>
 </html>
